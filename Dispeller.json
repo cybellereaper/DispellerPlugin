@@ -2,12 +2,12 @@
   "Author": "pupwife",
   "Name": "Dispeller",
   "InternalName": "Dispeller",
-  "AssemblyVersion": "1.3",
-  "Description": "A cute plugin to help you manage your Glamour Dresser by identifying items that share the same visual models.",
-  "Punchline": "Easily clean out your Glamour Dresser.",
+  "AssemblyVersion": "2.0",
+  "Description": "Analyze your Glamour Dresser for shared models, recoverable slots, Armoire opportunities, and changes over time.",
+  "Punchline": "Find duplicate glamours and reclaim dresser space.",
   "ApplicableVersion": "any",
   "RepoUrl": "https://github.com/cybellereaper/DispellerPlugin",
-  "Tags": ["glamour", "dresser", "models", "fashion", "cute", "utility"],
+  "Tags": ["glamour", "dresser", "models", "fashion", "utility", "armoire"],
   "IsHide": "False",
   "IsTestingExclusive": "False"
 }
