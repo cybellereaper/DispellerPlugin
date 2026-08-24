@@ -52,6 +52,15 @@ public sealed class MainWindow : Window, IDisposable
         dresserChangedSinceAnalysis = true;
     }
 
+    public void NotifyCharacterChanged()
+    {
+        currentItems.Clear();
+        result = null;
+        initialLoadAttempted = false;
+        dresserChangedSinceAnalysis = false;
+        statusMessage = "Character changed. Loading this character's dresser snapshot...";
+    }
+
     public override void Draw()
     {
         if (!initialLoadAttempted && Plugin.PlayerState.IsLoaded)
