@@ -1,19 +1,33 @@
-using Dalamud.Configuration;
 using System;
+using System.Collections.Generic;
+using Dalamud.Configuration;
+using Dispeller.Models;
 
 namespace Dispeller;
 
 [Serializable]
-public class Configuration : IPluginConfiguration
+public sealed class Configuration : IPluginConfiguration
 {
-    public int Version { get; set; } = 0;
+    public int Version { get; set; } = 2;
 
-    public bool ShowOnlyWeapons { get; set; } = false;
-    public bool ShowOnlyClothing { get; set; } = false;
+    public HashSet<uint> ProtectedItemIds { get; set; } = [];
+    public HashSet<string> IgnoredGroupKeys { get; set; } = [];
 
-    // Save configuration
-    public void Save()
-    {
+    public GearSlot SlotFilter { get; set; } = GearSlot.All;
+    public bool ArmoireOnly { get; set; }
+    public bool HideIgnoredGroups { get; set; } = true;
+    public bool ShowModelIds { get; set; }
+    public int MinimumGroupSize { get; set; } = 2;
+    public ResultSortMode SortMode { get; set; } = ResultSortMode.Slot;
+
+    public void Save() =>
         Plugin.PluginInterface.SavePluginConfig(this);
-    }
+}
+
+public enum ResultSortMode
+{
+    Slot = 0,
+    LargestGroups = 1,
+    MostRecoverable = 2,
+    Name = 3,
 }
