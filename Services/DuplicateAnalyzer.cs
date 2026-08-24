@@ -23,28 +23,8 @@ public sealed class DuplicateAnalyzer
         DresserSnapshot? previousSnapshot,
         Configuration configuration)
     {
-        var uniqueItems = rawItems
-            .Where(item => item.ItemId != 0)
-            .GroupBy(item => (item.Slot, item.ItemId))
-            .Select(group => group.First())
-            .ToList();
-
-        metadataService.Warm(uniqueItems.Select(item => item.ItemId));
-
-        var analyzed = new List<AnalyzedItem>(uniqueItems.Count);
-        foreach (var dresserItem in uniqueItems)
-        {
-            var metadata = metadataService.Get(dresserItem.ItemId);
-            if (metadata == null || metadata.Model.IsEmpty)
-                continue;
-
-            analyzed.Add(new AnalyzedItem
-            {
-                DresserItem = dresserItem,
-                Metadata = metadata,
-                IsProtected = configuration.ProtectedItemIds.Contains(dresserItem.ItemId),
-            });
-        }
+        var uniqueItems = GetUniqueItems(rawItems);
+        var analyzed = CreateAnalyzedItems(uniqueItems, configuration.ProtectedItemIds);
 
         var groups = analyzed
             .GroupBy(item => (item.Metadata.Slot, item.Metadata.Model))
@@ -92,6 +72,37 @@ public sealed class DuplicateAnalyzer
 
     public static string CreateGroupKey(GearSlot slot, ModelSignature model) =>
         $"{(int)slot}:{model}";
+
+    private static List<DresserItem> GetUniqueItems(IEnumerable<DresserItem> items) =>
+        items
+            .Where(item => item.ItemId != 0)
+            .GroupBy(item => (item.Slot, item.ItemId))
+            .Select(group => group.First())
+            .ToList();
+
+    private List<AnalyzedItem> CreateAnalyzedItems(
+        IReadOnlyList<DresserItem> items,
+        IReadOnlySet<uint>? protectedItemIds)
+    {
+        metadataService.Warm(items.Select(item => item.ItemId));
+
+        var analyzed = new List<AnalyzedItem>(items.Count);
+        foreach (var dresserItem in items)
+        {
+            var metadata = metadataService.Get(dresserItem.ItemId);
+            if (metadata == null || metadata.Model.IsEmpty)
+                continue;
+
+            analyzed.Add(new AnalyzedItem
+            {
+                DresserItem = dresserItem,
+                Metadata = metadata,
+                IsProtected = protectedItemIds?.Contains(dresserItem.ItemId) == true,
+            });
+        }
+
+        return analyzed;
+    }
 
     private DuplicateGroup BuildGroup(
         GearSlot slot,
@@ -184,17 +195,10 @@ public sealed class DuplicateAnalyzer
 
     private HashSet<string> BuildDuplicateGroupKeys(DresserSnapshot snapshot)
     {
-        return snapshot.Items
-            .Select(item => new DresserItem(item.Slot, item.ItemId, 0, item.Stain1, item.Stain2))
-            .GroupBy(item => (item.Slot, item.ItemId))
-            .Select(group => group.First())
-            .Select(item => new
-            {
-                Item = item,
-                Metadata = metadataService.Get(item.ItemId),
-            })
-            .Where(entry => entry.Metadata != null && !entry.Metadata.Model.IsEmpty)
-            .GroupBy(entry => (entry.Metadata!.Slot, entry.Metadata.Model))
+        var analyzed = CreateAnalyzedItems(GetUniqueItems(snapshot.ToDresserItems()), protectedItemIds: null);
+
+        return analyzed
+            .GroupBy(item => (item.Metadata.Slot, item.Metadata.Model))
             .Where(group => group.Count() > 1)
             .Select(group => CreateGroupKey(group.Key.Slot, group.Key.Model))
             .ToHashSet(StringComparer.Ordinal);
