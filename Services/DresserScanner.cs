@@ -46,6 +46,16 @@ public sealed class DresserScanner : IDisposable
 
     public bool TryRefresh() => TryCapture(force: true);
 
+    public void ClearCache()
+    {
+        lock (syncRoot)
+        {
+            cachedItems = [];
+            lastFingerprint = 0;
+            hasFingerprint = false;
+        }
+    }
+
     private void OnFrameworkUpdate(IFramework _)
     {
         var now = Environment.TickCount64;
