@@ -9,7 +9,7 @@ public class DresserScanner : IDisposable
 {
     private static readonly object LockObject = new();
     private static List<PrismBoxItem> _cachedDresserItems = [];
-    private static int _dresserItemSlotsUsed = 0;
+    private static int _dresserItemSlotsUsed = -1;
 
     private bool _disposed = false;
 
@@ -29,24 +29,21 @@ public class DresserScanner : IDisposable
             if (!agent->IsAddonReady() || agent->Data == null)
                 return;
 
-            // Get used slots offset
-            ushort* usedSlots = (ushort*)((nint)agent->Data + 0x10B460);
-            
-            // Always cache if cache is empty, or if the slot count has changed
-            bool shouldUpdate = false;
+            var usedSlots = agent->Data->UsedSlots;
+
+            bool shouldUpdate;
             lock (LockObject)
             {
-                shouldUpdate = _cachedDresserItems.Count == 0 || *usedSlots != _dresserItemSlotsUsed;
+                shouldUpdate = usedSlots != _dresserItemSlotsUsed;
             }
-            
+
             if (!shouldUpdate)
                 return;
 
             lock (LockObject)
             {
-                var wasEmpty = _cachedDresserItems.Count == 0;
                 _cachedDresserItems.Clear();
-                
+
                 var itemCount = 0;
                 foreach (var item in agent->Data->PrismBoxItems)
                 {
@@ -55,8 +52,8 @@ public class DresserScanner : IDisposable
 
                     _cachedDresserItems.Add(new PrismBoxItem
                     {
-                        // Don't store name from dresser data - it can be incorrect/outdated
-                        // Name will be retrieved from Lumina in MainWindow for accuracy
+                        // Don't store name from dresser data - it can be incorrect/outdated.
+                        // Name will be retrieved from Lumina in MainWindow for accuracy.
                         Name = string.Empty,
                         Slot = item.Slot,
                         ItemId = item.ItemId,
@@ -67,26 +64,26 @@ public class DresserScanner : IDisposable
                     itemCount++;
                 }
 
-                _dresserItemSlotsUsed = *usedSlots;
-                
+                _dresserItemSlotsUsed = usedSlots;
+
                 if (itemCount > 0)
                 {
-                    Plugin.Log.Information($"OnFrameworkUpdate: Cached {itemCount} items from dresser (cache was empty: {wasEmpty})");
+                    Plugin.Log.Information($"OnFrameworkUpdate: Cached {itemCount} items from dresser");
                 }
             }
         }
         catch
         {
-            // Silently handle exceptions in framework update to avoid spam
-            // Errors will be logged if they occur during manual refresh
+            // Silently handle exceptions in framework update to avoid spam.
+            // Errors will be logged if they occur during manual refresh.
         }
     }
 
-    public static unsafe List<PrismBoxItem> GetDresserItems()
+    public static List<PrismBoxItem> GetDresserItems()
     {
         lock (LockObject)
         {
-            // Return a snapshot copy to prevent race conditions if cache updates during scan
+            // Return a snapshot copy to prevent race conditions if cache updates during scan.
             return new List<PrismBoxItem>(_cachedDresserItems);
         }
     }
@@ -117,7 +114,7 @@ public class DresserScanner : IDisposable
             lock (LockObject)
             {
                 _cachedDresserItems.Clear();
-                
+
                 var itemCount = 0;
                 foreach (var item in agent->Data->PrismBoxItems)
                 {
@@ -136,10 +133,8 @@ public class DresserScanner : IDisposable
                     itemCount++;
                 }
 
-                // Update the used slots counter to prevent immediate re-trigger
-                ushort* usedSlots = (ushort*)((nint)agent->Data + 0x10B460);
-                _dresserItemSlotsUsed = *usedSlots;
-                
+                _dresserItemSlotsUsed = agent->Data->UsedSlots;
+
                 Plugin.Log.Information($"TryRefresh: Loaded {itemCount} items from dresser");
                 return true;
             }
