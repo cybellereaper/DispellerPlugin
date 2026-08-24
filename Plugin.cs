@@ -45,6 +45,9 @@ public sealed class Plugin : IDalamudPlugin
         mainWindow = new MainWindow(this);
         WindowSystem.AddWindow(mainWindow);
 
+        ClientState.Login += OnLogin;
+        ClientState.Logout += OnLogout;
+
         CommandManager.AddHandler(CommandName, new CommandInfo(OnCommand)
         {
             HelpMessage = "Open Dispeller - analyze shared glamour models and potential dresser savings.",
@@ -62,12 +65,26 @@ public sealed class Plugin : IDalamudPlugin
         mainWindow.NotifyDresserUpdated();
     }
 
+    private void OnLogin()
+    {
+        DresserScanner.ClearCache();
+        mainWindow.NotifyCharacterChanged();
+    }
+
+    private void OnLogout(int _, int __)
+    {
+        DresserScanner.ClearCache();
+        mainWindow.NotifyCharacterChanged();
+    }
+
     public void Dispose()
     {
         PluginInterface.UiBuilder.Draw -= WindowSystem.Draw;
         PluginInterface.UiBuilder.OpenMainUi -= ToggleMainUi;
 
         DresserScanner.Updated -= OnDresserUpdated;
+        ClientState.Login -= OnLogin;
+        ClientState.Logout -= OnLogout;
 
         WindowSystem.RemoveAllWindows();
 
