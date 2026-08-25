@@ -65,13 +65,13 @@ public sealed class Plugin : IDalamudPlugin
         mainWindow.NotifyDresserUpdated();
     }
 
-    private void OnLogin()
-    {
-        DresserScanner.ClearCache();
-        mainWindow.NotifyCharacterChanged();
-    }
+    private void OnLogin() =>
+        OnCharacterChanged();
 
-    private void OnLogout(int _, int __)
+    private void OnLogout(int _, int __) =>
+        OnCharacterChanged();
+
+    private void OnCharacterChanged()
     {
         DresserScanner.ClearCache();
         mainWindow.NotifyCharacterChanged();
