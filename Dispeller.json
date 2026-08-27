@@ -1,12 +1,12 @@
 {
-  "Author": "cybellereaper",
+  "Author": "aliceblackrose",
   "Name": "Dispeller",
   "InternalName": "Dispeller",
   "AssemblyVersion": "2.0",
   "Description": "Analyze your Glamour Dresser for shared models, recoverable slots, Armoire opportunities, and changes over time.",
   "Punchline": "Find duplicate glamours and reclaim dresser space.",
   "ApplicableVersion": "any",
-  "RepoUrl": "https://github.com/cybellereaper/DispellerPlugin",
+  "RepoUrl": "https://github.com/aliceblackrose/DispellerPlugin",
   "Tags": ["glamour", "dresser", "models", "fashion", "utility", "armoire"],
   "IsHide": "False",
   "IsTestingExclusive": "False"
